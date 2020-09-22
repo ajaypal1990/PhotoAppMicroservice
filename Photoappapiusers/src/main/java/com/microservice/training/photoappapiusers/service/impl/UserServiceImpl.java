@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -17,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.microservice.training.photoappapiusers.data.AlbumServiceClient;
 import com.microservice.training.photoappapiusers.data.UserEntity;
 import com.microservice.training.photoappapiusers.service.UserService;
 import com.microservice.training.photoappapiusers.shared.UserDto;
@@ -26,6 +29,9 @@ import com.microservice.training.photoappapiusers.ui.model.AlbumResponseModel;
 
 @Service
 public class UserServiceImpl implements UserService {
+	
+	Logger logger=LoggerFactory.getLogger(this.getClass());
+	
 	@Autowired
 	private UserRepository repository;
 	
@@ -40,6 +46,9 @@ public class UserServiceImpl implements UserService {
 	
 	@Autowired
 	private Utils util;
+	
+	@Autowired
+	private AlbumServiceClient feignClient;
 	
 	@Override
 	public UserDto createUser(UserDto userDto) {
@@ -89,12 +98,16 @@ public class UserServiceImpl implements UserService {
 		
 		UserDto returnValue=new ModelMapper().map(userEntity, UserDto.class);
 		
-		String albumUrls=String.format(env.getProperty("albums.url"),userId);
-		
-		ResponseEntity<List<AlbumResponseModel>> albumListResponce=restTemplate.exchange(albumUrls, HttpMethod.GET	, null, new ParameterizedTypeReference<List<AlbumResponseModel>>() {
-		});
-		
-		List<AlbumResponseModel> albumList=albumListResponce.getBody();
+		/*
+		 * String albumUrls=String.format(env.getProperty("albums.url"),userId);
+		 * 
+		 * ResponseEntity<List<AlbumResponseModel>>
+		 * albumListResponce=restTemplate.exchange(albumUrls, HttpMethod.GET , null, new
+		 * ParameterizedTypeReference<List<AlbumResponseModel>>() { });
+		 * 
+		 * List<AlbumResponseModel> albumList=albumListResponce.getBody();
+		 */
+		List<AlbumResponseModel> albumList = feignClient.getAlbums(userId);
 		
 		returnValue.setAlbumList(albumList);
 		return returnValue;
