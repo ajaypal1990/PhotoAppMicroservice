@@ -9,5 +9,6 @@ import com.microservice.training.photoappapiusers.data.UserEntity;
 public interface UserRepository extends CrudRepository<UserEntity, Long> {
 	
 	UserEntity findByEmail(String email);
+	UserEntity findByUserId(String userId);
 	
 }

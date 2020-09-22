@@ -1,21 +1,28 @@
 package com.microservice.training.photoappapiusers.service.impl;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import com.microservice.training.photoappapiusers.data.UserEntity;
 import com.microservice.training.photoappapiusers.service.UserService;
 import com.microservice.training.photoappapiusers.shared.UserDto;
 import com.microservice.training.photoappapiusers.shared.UserRepository;
 import com.microservice.training.photoappapiusers.shared.Utils;
+import com.microservice.training.photoappapiusers.ui.model.AlbumResponseModel;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -24,6 +31,12 @@ public class UserServiceImpl implements UserService {
 	
 	@Autowired
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
+	
+	@Autowired
+	private RestTemplate restTemplate;
+	
+	@Autowired
+	private Environment env;
 	
 	@Autowired
 	private Utils util;
@@ -65,6 +78,26 @@ public class UserServiceImpl implements UserService {
 		}
 		
 		return new ModelMapper().map(entity, UserDto.class);
+	}
+
+	@Override
+	public UserDto getUserByUserId(String userId) {
+		UserEntity userEntity=repository.findByUserId(userId);
+		if(userEntity==null) {
+			throw new UsernameNotFoundException(userId);
+		}
+		
+		UserDto returnValue=new ModelMapper().map(userEntity, UserDto.class);
+		
+		String albumUrls=String.format(env.getProperty("albums.url"),userId);
+		
+		ResponseEntity<List<AlbumResponseModel>> albumListResponce=restTemplate.exchange(albumUrls, HttpMethod.GET	, null, new ParameterizedTypeReference<List<AlbumResponseModel>>() {
+		});
+		
+		List<AlbumResponseModel> albumList=albumListResponce.getBody();
+		
+		returnValue.setAlbumList(albumList);
+		return returnValue;
 	}
 
 }

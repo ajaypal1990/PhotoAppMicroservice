@@ -1,6 +1,10 @@
 package com.microservice.training.photoappapiusers.shared;
 
+import java.util.List;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import com.microservice.training.photoappapiusers.ui.model.AlbumResponseModel;
 
 public class UserDto {
 
@@ -10,7 +14,7 @@ public class UserDto {
 	private String password;
 	private String userId;
 	private String encryptedPassword;
-	
+	List<AlbumResponseModel> albumList;
 	
 	public UserDto() {
 		super();
@@ -50,6 +54,12 @@ public class UserDto {
 	}
 	public void setEncryptedPassword(String encryptedPassword) {
 		this.encryptedPassword = encryptedPassword;
+	}
+	public List<AlbumResponseModel> getAlbumList() {
+		return albumList;
+	}
+	public void setAlbumList(List<AlbumResponseModel> albumList) {
+		this.albumList = albumList;
 	}
 	
 	
